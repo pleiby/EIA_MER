@@ -416,14 +416,19 @@ MER_PetDataA = MER_PetData %>% filter(MM == "13") # get annual data only
 Keep only essential fields (name MSN, Value, and date )
  and spread out vars into columns
 
-```{r}
+```{r spreadMainPetrVars}
 
-varsWanted = c("PAPRPUS", "NLPRPUS", "RYPRPUS", 
-               "PAGLPUS", "PASCPUS", "PNPRPUS", 
-               "PAEXPUS", "PAIMPUS", "PANIPUS", "PATCPUS")
+varsWanted = c("PAPRPUS", "NLPRPUS", "PNPRPUS",         # Field prod: Total Crude, NGL, Total
+               "RYPRPUS",                               # Renewable Fuels and Oxygenates
+               "PAGLPUS",                               # Petr Processing Gain
+               "PAEXPUS", "PAIMPUS", "PANIPUS",         # Exports, Imports, Net Imports
+               "PASCPUS",                               # Petr Stock Change
+               "PAAJPUS",                               # Adjustments
+               "PATCPUS")                               # Petr Products Supplies
 EIAdf_metadata %>% filter(MSN %in% varsWanted)
 # PATCPUS = Petroleum Consumption, United States = Petroleum Products Supplied
 # PAPRPUS = Crude Oil Production, United States = Crude Oil Production, Total
+
 # Petroleum Consumption Series From Tables 3.7A, B, C
 # c("PARCPUS", "PACCPUS", "PAICPUS","PAACPUS", "PAEIZUS")
 # Residential, Commercial, Industrial, Transportation and Electric
@@ -434,7 +439,7 @@ PetA = MER_PetDataA %>%
   spread(key = MSN, value=Value)
 ```
 
-```{r}
+```{r reportSelectedPetrValues}
 rownames(PetA) = PetA$YYYY
 cat("2007 Consumption: ", PetA["2007", "PATCPUS"])
 cat("2012 Consumption: ", PetA["2012", "PATCPUS"])
@@ -442,7 +447,28 @@ cat("2017 Consumption: ", PetA["2017", "PATCPUS"])
 
 cat("2007 Production: ", PetA["2007", "PATCPUS"])
 cat("2012 Production: ", PetA["2012", "PATCPUS"])
+cat("2016 Production: ", PetA["2016", "PATCPUS"])
 cat("2017 Production: ", PetA["2017", "PATCPUS"])
+
+sum(abs(PetA$PAIMPUS - PetA$PAEXPUS - PetA$PANIPUS))
+test = PetA %>% 
+  mutate(
+    NetImpBal = PAIMPUS - PAEXPUS - PANIPUS,
+    FldPrdBal = PAPRPUS + NLPRPUS - PNPRPUS,
+    SupTotal  = PNPRPUS + PAGLPUS + RYPRPUS + PANIPUS - PASCPUS + PAAJPUS,
+    SupDemBal = PNPRPUS + PAGLPUS + RYPRPUS + PANIPUS - PASCPUS + PAAJPUS - PATCPUS
+  )
+
+PetA = PetA %>% 
+  mutate(
+    ImpFract  = PANIPUS/PATCPUS
+  )
+
+rownames(PetA) = PetA$YYYY
+cat("2007 Imports/Consumption: ", PetA["2007", "ImpFract"])
+cat("2016 Imports/Consumption: ", PetA["2016", "ImpFract"])
+cat("2077 Imports/Consumption: ", PetA["2017", "ImpFract"])
+
 ```
 
 
