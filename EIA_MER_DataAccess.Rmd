@@ -1,0 +1,496 @@
+---
+title: "EIA_MER_DataAccess"
+author: "Paul Leiby"
+date: "Aug 09, 2018"
+output: word_document
+---
+
+File: EIA_MER_DataAccess_2018.Rmd
+
+Created by: Paul N. Leiby
+Last revised: 20190809
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Set working environment and paths
+
+```{r setWorkingEnv}
+## clear: remove (almost) everything in the working environment.
+## You will get no warning, so don't do this unless you are really sure.
+rm(list = ls())
+
+#worksubpath = "/SPR/Data/EIA_MER"
+datasubpath = "../"
+```
+
+This reads from the EIA data browser website for the Annual Energy Review and Monthly Energy Review
+
+MER Data Section List
+-----------------
+
+1. Section 1. Energy Overview
+2. Section 2. Energy Consumption by Sector
+3. Section 3. Petroleum
+4. Section 4. Natural Gas
+5. Section 5. Crude Oil and Natural Gas Resource Development
+6. Section 6. Coal
+7. Section 7. Electricity
+8. Section 8. Nuclear Energy
+9. Section 9. Energy Prices
+10. Section 10. Renewable Energy
+11. Section 11. International Petroleum
+12. Section 12. Environment
+13. Appendix A. British Thermal Unit Conversion Factors
+14. Appendix B. Metric Conversion Factors, Metric Prefixes, and Other Physical Conversion Factors
+15. Appendix C. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+
+
+MER Data Table List
+--------------
+
+    Section 1. Energy Overview
+    1.2 Primary Energy Production by Source
+    1.1 Primary Energy Overview
+    1.3 Primary Energy Consumption by Source
+    1.4a Primary Energy Imports by Source
+    1.4b Primary Energy Exports by Source and Total Net Imports
+    1.5 Merchandise Trade Value
+    1.6 Cost of Fuels to End Users in Real (1982-1984) Dollars
+    1.7 Primary Energy Consumption, Energy Expenditures, and Carbon Dioxide Emissions Indicators
+    1.8 Motor Vehicle Mileage, Fuel Consumption, and Fuel Economy
+    1.9 Heating Degree-Days by Census Division
+    1.10 Cooling Degree-Days by Census Division
+    Section 2. Energy Consumption by Sector
+    2.1 Energy Consumption by Sector
+    2.2 Residential Sector Energy Consumption
+    2.3 Commercial Sector Energy Consumption
+    2.4 Industrial Sector Energy Consumption
+    2.5 Transportation Sector Energy Consumption
+    2.6 Electric Power Sector Energy Consumption
+    2.7 U.S. Government Energy Consumption by Agency, Fiscal Years
+    2.8 U.S. Government Energy Consumption by Source, Fiscal Years
+    Section 3. Petroleum
+    3.1 Petroleum Overview
+    3.2 Refinery and Blender Net Inputs and Net Production
+    3.3 Petroleum Trade
+    3.3a Overview
+    3.3b Imports and Exports by Type
+    3.3c Imports From OPEC Countries
+    3.3d Imports From Non-OPEC Countries
+    3.4 Petroleum Stocks
+    3.5 Petroleum Products Supplied by Type
+    3.6 Heat Content of Petroleum Products Supplied by Type
+    3.7 Petroleum Consumption
+    3.7a Residential and Commercial Sectors
+    3.7b Industrial Sector
+    3.7c Transportation and Electric Power Sectors
+    3.8 Heat Content of Petroleum Consumption
+    3.8a Residential and Commercial Sectors
+    3.8b Industrial Sector
+    3.8c Transportation and Electric Power Sectors
+    Section 4. Natural Gas
+    4.1 Natural Gas Overview
+    4.2 Natural Gas Trade by Countr
+    4.3 Natural Gas Consumption by Sector
+    4.4 Natural Gas in Underground Storage
+    Section 5. Crude Oil and Natural Gas Resource Development
+    5.1 Crude Oil and Natural Gas Drilling Activity Measurements
+    5.2 Crude Oil and Natural Gas Exploratory and Development Wells
+    Section 6. Coal
+    6.1 Coal Overview
+    6.2 Coal Consumption by Sector
+    6.3 Coal Stocks by Sector
+    Section 7. Electricity
+    7.1 Electricity Overview
+    7.2 Electricity Net Generation
+    7.2a Total (All Sectors)
+    7.2b Electric Power Sector
+    7.2c Commercial and Industrial Sectors
+    7.3 Consumption of Combustible Fuels for Electricity Generation
+    7.3a Total (All Sectors)
+    7.3b Electric Power Sector
+    7.3c Commercial and Industrial Sectors (Selected Fuels)
+    7.4 Consumption of Combustible Fuels for Electricity Generation and Useful Thermal Output
+    7.4a Total (All Sectors)
+    7.4b Electric Power Sector
+    7.4c Commercial and Industrial Sectors (Selected Fuels)
+    7.5 Stocks of Coal and Petroleum: Electric Power Sector
+    7.6 Electricity End Use
+    Section 8. Nuclear Energy
+    8.1 Nuclear Energy Overview
+    Section 9. Energy Prices
+    9.1 Crude Oil Price Summary
+    9.2 F.O.B. Costs of Crude Oil Imports From Selected Countries
+    9.3 Landed Costs of Crude Oil Imports From Selected Countries
+    9.4 Retail Motor Gasoline and On-Highway Diesel Fuel Prices
+    9.5 Refiner Prices of Residual Fuel Oil
+    9.6 Refiner Prices of Petroleum Products for Resale
+    9.7 Refiner Prices of Petroleum Products to End Users
+    9.8 Average Retail Prices of Electricity
+    9.9 Cost of Fossil-Fuel Receipts at Electric Generating Plants
+    9.10 Natural Gas Prices
+    Section 10. Renewable Energy
+    10.1 Renewable Energy Production and Consumption by Source
+    10.2 Renewable Energy Consumption
+    10.2a Residential and Commercial Sectors
+    10.2b Industrial and Transportation Sectors
+    10.2c Electric Power Secto
+    10.3 Fuel Ethanol Overview
+    10.4 Biodiesel and Other Renewable Fuels Overview
+    Section 11. International Petroleum
+    11.1 World Crude Oil Production
+    11.1a OPEC Members
+    11.1b Persian Gulf Nations, Non-OPEC, and World
+    11.2 Petroleum Consumption in OECD Countries
+    11.3 Petroleum Stocks in OECD Countries
+    Section 12. Environment
+    12.1 Carbon Dioxide Emissions From Energy Consumption by Sourc
+    12.2 Carbon Dioxide Emissions From Energy Consumption: Residential Secto
+    12.3 Carbon Dioxide Emissions From Energy Consumption: Commercial Sector
+    12.4 Carbon Dioxide Emissions From Energy Consumption: Industrial Sector
+    12.5 Carbon Dioxide Emissions From Energy Consumption: Transportation Sector
+    12.6 Carbon Dioxide Emissions From Energy Consumption: Electric Power Sector
+    12.7 Carbon Dioxide Emissions From Biomass Energy Consumptio
+    Appendix A. British Thermal Unit Conversion Factors
+    A1. Approximate Heat Content of Petroleum and Other Liquids
+    A2. Approximate Heat Content of Petroleum Production, Imports, and Exports
+    A3. Approximate Heat Content of Petroleum Consumption and Fuel Ethanol
+    A4. Approximate Heat Content of Natural Gas
+    A5. Approximate Heat Content of Coal and Coal Coke
+    A6. Approximate Heat Rates for Electricity, and Heat Content of Electricity
+    Appendix B. Metric Conversion Factors, Metric Prefixes, and Other Physical Conversion Factors
+    B1. Metric Conversion Factors
+    B2. Metric Prefixes
+    B3. Other Physical Conversion Factors
+    Appendix C. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+    C1. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+    Appendix D. Estimated Primary Energy Consumption in the United States, Selected Years, 1635-1945
+    D1. Estimated Primary Energy Consumption in the United States, Selected Years, 1635-1945
+
+Examples of Reading Tables from MER Data Site
+------------------------
+
+* Requires internet connection or local CSV file availability
+
+```{r setupWorkspace}
+#library(XLConnect)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lubridate)
+
+```
+
+```{r readMERdata}
+# set working directory - not necessary for RStudio project approach, or if console session launched from working directory
+# setwd(paste0(workroot,worksubpath))
+
+# Specify data location
+# EIA MER URL query, less table name
+# MER_URLbase =  "https://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=" # outdated
+MER_URLbase =  "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl="
+# e.g.: sourceURL =  "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T11.01A"
+
+# download latest version of 4 tables from EIA/MER website
+naStrings = c("","Not Available","Not Applicable") # ways that MER indicates NA
+
+#tableSiteURL = "https://www.eia.gov/totalenergy/data/browser/"
+tableSiteURL = "https://www.eia.gov/totalenergy/data/browser/"
+#csvExtension = "csv.cfm?tbl="
+#xlsExtension = "xls.cfm?tbl="
+csvExtension = "csv.php?tbl="
+xlsExtension = "xls.php?tbl="
+
+
+# "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.03" # MER Table 1.3 Primary Energy Consumption by Source
+# "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.06"
+# "http://www.eia.gov/totalenergy/data/browser/xls.cfm?tbl=T01.06"
+# "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.08"
+# "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T03.07C" # annual and monthly
+
+# syntax for call to EIA data browser
+browserSiteURL = "https://www.eia.gov/totalenergy/data/browser/index.php?tbl=T01.03#/?f=A"
+# http://www.eia.gov/beta/MER/index.cfm?tbl=T03.07C#/?f=M&start=197301&end=201603&charted=8-13
+
+onlineReading = T
+
+# sectionWanted = "T03"
+# tableWanted = "07C"
+sectionWanted = "T01"
+tableWanted = "03"
+
+tableURL = paste0(tableSiteURL, csvExtension, sectionWanted, ".", tableWanted)
+
+readMERtable <- function(sectionW, tableW, onlineReading = T) {
+  if(onlineReading==T) { # get info from URL for EIA MER data site
+  #  T01.03 = read.csv(url(tableURL))
+    newdf = read.csv(url(paste0(tableSiteURL,csvExtension, sectionW, ".", tableW)))
+  } else { # assume csv file is locally available
+  #  T01.03 = read.csv(table))
+    newdf = read.csv(    paste0(workroot,datasubpath, "MER_", sectionW, "_", tableW,".csv"))
+  }
+    
+  newdf$Value = as.numeric(as.character(newdf$Value))
+  return(newdf)
+}
+
+# First drop the values and dates, to get a table of metadata:
+#  variable names (MSN), and associated descriptions and units
+getMetaData <- function(MERdf, tableName) {
+  md = MERdf %>% select(-c(YYYYMM, Value)) %>% unique()
+  # add table name, so that we can combine datasets and reconstruct tables
+  md$Table = tableName
+  row.names(md) <- c()
+  return(md)
+}
+
+```
+
+```{r preprocessDataT01_03}
+onlineReading = T
+sectionWanted = "T01"
+tableWanted = "03"
+
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+
+EIAdf_metadata = data.frame()
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+```
+
+```{r}
+# for table formatting, see 
+# https://cran.r-project.org/web/packages/gridExtra/vignettes/tableGrob.html
+# https://github.com/baptiste/gridextra/wiki/tableGrob
+library(grid)
+library(gridExtra)
+# rescale parts of the table
+mytheme <- gridExtra::ttheme_default(
+    core =    list(fg_params=list(cex = 0.5)),
+    colhead = list(fg_params=list(cex = 1.0)),
+    rowhead = list(fg_params=list(cex = 1.0)))
+myt <- gridExtra::tableGrob(EIAdf_metadata, theme = mytheme)
+grid.draw(myt)
+# grid.table(EIAdf_metadata, gp=gpar(fontsize=8)) # throws error for fontsize param
+
+# produce wide table with one column per variable, sorted by date
+EIAdf_w = EIAdf %>% select(-c(Column_Order, Description, Unit)) %>% 
+  spread(key = MSN, value=Value) %>% arrange(YYYYMM)
+summary(EIAdf_w)
+```
+
+Visualize the data
+-------------------
+
+```{r visualizeData0}
+
+```
+
+```{r defineDownloadEIA_MER}
+
+downloadEIA_MER_table <- function (sectionW, tableW) {
+  # function to download specified table from EIA's MER,
+  #  create a dataframe named appropriately,
+  #  and add table metadata to a dataframe compiling that info
+  # Use suppressWarnings() to avoid "NAs introduced by coercion" message
+  EIAdf = readMERtable(sectionW, tableW, onlineReading=T)
+  tableName = paste("MER",sectionW, tableW,sep="_")
+  assign(tableName, EIAdf)
+
+  # to check if dataframe exists, given name as text string df_name:
+  #  exists(df_name) && is.data.frame(get(df_name))
+  if (!exists("EIAdf_metadata")) {
+      EIAdf_metadata = data.frame()  
+  }
+
+  EIAdf_metadata = rbind(df_metadata, getMetaData(EIAdf, tableName ))
+  
+}
+
+```
+
+### Get US Oil Production, Consumption, and Import Data
+
+```{r preprocessDataT03_01}
+onlineReading = T
+
+sectionWanted = "T03"
+tableWanted = "01"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
+
+sectionWanted = "T11"
+tableWanted = "02"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
+
+sectionWanted = "T11"
+tableWanted = "01B"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
+sectionWanted = "T11"
+tableWanted = "01A"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
+```
+
+### Combine the read Tables 
+
+```{r combineReadTables}
+
+# combine the petroleum data table
+MER_PetData = rbind(MER_T03_01, MER_T11_01A, MER_T11_01B, MER_T11_02)
+MER_PetData$YYYYMMc = as.character(MER_PetData$YYYYMM)
+
+MER_PetData = MER_PetData %>% 
+  select(-Column_Order) %>% 
+  separate(YYYYMMc, sep= 4, into = c("YYYY", "MM")) # split into year and month fields
+
+```
+
+```{r}
+# look for duplicate variables and drop (necessary before spread(), to avoid error)
+
+# Remove duplicate rows based on one or more col values: dplyr::distinct(my_data, colname).
+#   distinct() is best-suited for interactive use. 
+# The function distinct_() should be used for calling from a function.
+# In this case the input must be “quoted”. 
+# Also can use base fns unique() and duplicated()
+# MER_PetData = MER_PetData %>%
+#  distinct_("MSN", "Value", "YYYYMM")  # leaves only the variables tested for distinctness
+
+Pet = MER_PetData %>% select(MSN, Value, YYYYMM)
+MER_PetData = MER_PetData[!duplicated(Pet), ]  # keep all vars, if distinct name/value/date
+```
+
+get annual data subset
+
+```{r}
+MER_PetDataA = MER_PetData %>% filter(MM == "13") # get annual data only
+
+# MER_PetDataA = MER_PetDataA %>%
+#  distinct_("MSN", "Value", "YYYYMM")
+
+```
+
+Keep only essential fields (name MSN, Value, and date )
+ and spread out vars into columns
+
+```{r}
+
+varsWanted = c("PAPRPUS", "NLPRPUS", "RYPRPUS", 
+               "PAGLPUS", "PASCPUS", "PNPRPUS", 
+               "PAEXPUS", "PAIMPUS", "PANIPUS", "PATCPUS")
+EIAdf_metadata %>% filter(MSN %in% varsWanted)
+# PATCPUS = Petroleum Consumption, United States = Petroleum Products Supplied
+# PAPRPUS = Crude Oil Production, United States = Crude Oil Production, Total
+# Petroleum Consumption Series From Tables 3.7A, B, C
+# c("PARCPUS", "PACCPUS", "PAICPUS","PAACPUS", "PAEIZUS")
+# Residential, Commercial, Industrial, Transportation and Electric
+
+PetA = MER_PetDataA %>% 
+  select(-c(YYYYMM, Description, Unit, MM)) %>%
+  filter(MSN %in% varsWanted) %>%
+  spread(key = MSN, value=Value)
+```
+
+```{r}
+rownames(PetA) = PetA$YYYY
+cat("2007 Consumption: ", PetA["2007", "PATCPUS"])
+cat("2012 Consumption: ", PetA["2012", "PATCPUS"])
+cat("2017 Consumption: ", PetA["2017", "PATCPUS"])
+
+cat("2007 Production: ", PetA["2007", "PATCPUS"])
+cat("2012 Production: ", PetA["2012", "PATCPUS"])
+cat("2017 Production: ", PetA["2017", "PATCPUS"])
+```
+
+
+### Plot Monthly Petroleum Consumption
+
+``` {r plotPetrStocksumption}
+PetrCons = T11_02
+PetrCons$Date <- as.Date(paste0(as.character(PetrCons$YYYYMM),"15"),format="%Y%m%d")
+PetrCons = PetrCons %>% separate(Description, sep=",", c("Series", "Country"))
+
+PetrCons %>% filter(Series=="Petroleum Consumption", !is.na(Value)) %>%
+  ggplot(aes(x=Date, y=Value, color=Country)) + 
+  geom_line() + ggtitle("Petroleum Consumption") + ylab("1000 B/day")
+
+```
+
+### Prices
+
+    9.1 Crude Oil Price Summary
+    9.2 F.O.B. Costs of Crude Oil Imports From Selected Countries
+    9.3 Landed Costs of Crude Oil Imports From Selected Countries
+    9.4 Retail Motor Gasoline and On-Highway Diesel Fuel Prices
+    9.6 Refiner Prices of Petroleum Products for Resale
+    9.7 Refiner Prices of Petroleum Products to End Users
+    9.10 Natural Gas Prices
+    10.1 Renewable Energy Production and Consumption by Source
+    10.2 Renewable Energy Consumption
+    10.3 Fuel Ethanol Overview
+
+```{r readMERPrices}
+sectionWanted = "T09" # Petroleum Prices
+tableWanted = "01"    # Crude Oil Price Summary
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+
+assign(paste("MER",sectionWanted, tableWanted,sep="_"), EIAdf)
+
+```
+
+
+### Plot Monthly OECD Stocks
+
+``` {r plotPetrStocks}
+PetrStocks = T11_03
+PetrStocks$Date <- as.Date(paste0(as.character(PetrStocks$YYYYMM),"15"),format="%Y%m%d")
+PetrStocks = PetrStocks %>% separate(Description, sep=",", c("Series", "Country"))
+
+PetrStocks %>% filter(Series=="Petroleum Stocks", !is.na(Value)) %>%
+  ggplot(aes(x=Date, y=Value, color=Country)) + 
+  geom_line() + ggtitle("Petroleum Stocks") + ylab("Million Barrels")
+
+```
