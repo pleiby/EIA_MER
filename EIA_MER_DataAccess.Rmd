@@ -372,14 +372,33 @@ if (!exists("EIAdf_metadata")) {
 }
 EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
+# Renewable Energy Production
+sectionWanted = "T10"
+tableWanted = "01"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
 ```
 
 ### Combine the read Tables 
 
 ```{r combineReadTables}
+MER_BioFuels = MER_T10_01 %>% filter(MSN=="BFPRBUS")
+# https://en.wikipedia.org/wiki/Gasoline_gallon_equivalent
+BTUperGGE = 114000 
+TrilBTUperYperkBD = BTUperGGE*42*1000*365.25/1E12
+kBDperTrilBTUperY = 1/TrilBTUperYperkBD
 
 # combine the petroleum data table
-MER_PetData = rbind(MER_T03_01, MER_T11_01A, MER_T11_01B, MER_T11_02)
+MER_PetData = rbind(MER_T03_01, MER_T11_01A, MER_T11_01B, MER_T11_02, MER_BioFuels)
 MER_PetData$YYYYMMc = as.character(MER_PetData$YYYYMM)
 
 MER_PetData = MER_PetData %>% 
@@ -424,7 +443,9 @@ varsWanted = c("PAPRPUS", "NLPRPUS", "PNPRPUS",         # Field prod: Total Crud
                "PAEXPUS", "PAIMPUS", "PANIPUS",         # Exports, Imports, Net Imports
                "PASCPUS",                               # Petr Stock Change
                "PAAJPUS",                               # Adjustments
-               "PATCPUS")                               # Petr Products Supplies
+               "PATCPUS",                               # Petr Products Supplies
+               "BFPRBUS"                                # Biofuels Production
+)
 EIAdf_metadata %>% filter(MSN %in% varsWanted)
 # PATCPUS = Petroleum Consumption, United States = Petroleum Products Supplied
 # PAPRPUS = Crude Oil Production, United States = Crude Oil Production, Total
@@ -437,6 +458,8 @@ PetA = MER_PetDataA %>%
   select(-c(YYYYMM, Description, Unit, MM)) %>%
   filter(MSN %in% varsWanted) %>%
   spread(key = MSN, value=Value)
+
+PetA$BFPRBUS = PetA$BFPRBUS*kBDperTrilBTUperY
 ```
 
 ```{r reportSelectedPetrValues}
@@ -449,6 +472,9 @@ cat("2007 Production: ", PetA["2007", "PATCPUS"])
 cat("2012 Production: ", PetA["2012", "PATCPUS"])
 cat("2016 Production: ", PetA["2016", "PATCPUS"])
 cat("2017 Production: ", PetA["2017", "PATCPUS"])
+
+cat("2007 Biofuel Prod: ", PetA["2007", "BFPRBUS"])
+cat("2017 Biofuel Prod: ", PetA["2017", "BFPRBUS"])
 
 sum(abs(PetA$PAIMPUS - PetA$PAEXPUS - PetA$PANIPUS))
 test = PetA %>% 
