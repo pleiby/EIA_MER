@@ -1,0 +1,118 @@
+Section 1. Energy Overview
+1.2 Primary Energy Production by Source
+1.1 Primary Energy Overview
+1.3 Primary Energy Consumption by Source
+1.4a Primary Energy Imports by Source
+1.4b Primary Energy Exports by Source and Total Net Imports
+1.5 Merchandise Trade Value
+1.6 Cost of Fuels to End Users in Real (1982–1984) Dollars
+1.7 Primary Energy Consumption, Energy Expenditures, and Carbon Dioxide Emissions Indicators
+1.8 Motor Vehicle Mileage, Fuel Consumption, and Fuel Economy
+1.9 Heating Degree-Days by Census Division
+1.10 Cooling Degree-Days by Census Division
+Section 2. Energy Consumption by Sector
+2.1 Energy Consumption by Sector
+2.2 Residential Sector Energy Consumption
+2.3 Commercial Sector Energy Consumption
+2.4 Industrial Sector Energy Consumption
+2.5 Transportation Sector Energy Consumption
+2.6 Electric Power Sector Energy Consumption
+2.7 U.S. Government Energy Consumption by Agency, Fiscal Years
+2.8 U.S. Government Energy Consumption by Source, Fiscal Years
+Section 3. Petroleum
+3.1 Petroleum Overview
+3.2 Refinery and Blender Net Inputs and Net Production
+3.3 Petroleum Trade
+3.3a Overview
+3.3b Imports and Exports by Type
+3.3c Imports From OPEC Countries
+3.3d Imports From Non-OPEC Countries
+3.4 Petroleum Stocks
+3.5 Petroleum Products Supplied by Type
+3.6 Heat Content of Petroleum Products Supplied by Type
+3.7 Petroleum Consumption
+3.7a Residential and Commercial Sectors
+3.7b Industrial Sector
+3.7c Transportation and Electric Power Sectors
+3.8 Heat Content of Petroleum Consumption
+3.8a Residential and Commercial Sectors
+3.8b Industrial Sector
+3.8c Transportation and Electric Power Sectors
+Section 4. Natural Gas
+4.1 Natural Gas Overview
+4.2 Natural Gas Trade by Countr
+4.3 Natural Gas Consumption by Sector
+4.4 Natural Gas in Underground Storage
+Section 5. Crude Oil and Natural Gas Resource Development
+5.1 Crude Oil and Natural Gas Drilling Activity Measurements
+5.2 Crude Oil and Natural Gas Exploratory and Development Wells
+Section 6. Coal
+6.1 Coal Overview
+6.2 Coal Consumption by Sector
+6.3 Coal Stocks by Sector
+Section 7. Electricity
+7.1 Electricity Overview
+7.2 Electricity Net Generation
+7.2a Total (All Sectors)
+7.2b Electric Power Sector
+7.2c Commercial and Industrial Sectors
+7.3 Consumption of Combustible Fuels for Electricity Generation
+7.3a Total (All Sectors)
+7.3b Electric Power Sector
+7.3c Commercial and Industrial Sectors (Selected Fuels)
+7.4 Consumption of Combustible Fuels for Electricity Generation and Useful Thermal Output
+7.4a Total (All Sectors)
+7.4b Electric Power Sector
+7.4c Commercial and Industrial Sectors (Selected Fuels)
+7.5 Stocks of Coal and Petroleum: Electric Power Sector
+7.6 Electricity End Use
+Section 8. Nuclear Energy
+8.1 Nuclear Energy Overview
+Section 9. Energy Prices
+9.1 Crude Oil Price Summary
+9.2 F.O.B. Costs of Crude Oil Imports From Selected Countries
+9.3 Landed Costs of Crude Oil Imports From Selected Countries
+9.4 Retail Motor Gasoline and On-Highway Diesel Fuel Prices
+9.5 Refiner Prices of Residual Fuel Oil
+9.6 Refiner Prices of Petroleum Products for Resale
+9.7 Refiner Prices of Petroleum Products to End Users
+9.8 Average Retail Prices of Electricity
+9.9 Cost of Fossil-Fuel Receipts at Electric Generating Plants
+9.10 Natural Gas Prices
+Section 10. Renewable Energy
+10.1 Renewable Energy Production and Consumption by Source
+10.2 Renewable Energy Consumption
+10.2a Residential and Commercial Sectors
+10.2b Industrial and Transportation Sectors
+10.2c Electric Power Secto
+10.3 Fuel Ethanol Overview
+10.4 Biodiesel and Other Renewable Fuels Overview
+Section 11. International Petroleum
+11.1 World Crude Oil Production
+11.1a OPEC Members
+11.1b Persian Gulf Nations, Non-OPEC, and World
+11.2 Petroleum Consumption in OECD Countries
+11.3 Petroleum Stocks in OECD Countries
+Section 12. Environment
+12.1 Carbon Dioxide Emissions From Energy Consumption by Sourc
+12.2 Carbon Dioxide Emissions From Energy Consumption: Residential Secto
+12.3 Carbon Dioxide Emissions From Energy Consumption: Commercial Sector
+12.4 Carbon Dioxide Emissions From Energy Consumption: Industrial Sector
+12.5 Carbon Dioxide Emissions From Energy Consumption: Transportation Sector
+12.6 Carbon Dioxide Emissions From Energy Consumption: Electric Power Sector
+12.7 Carbon Dioxide Emissions From Biomass Energy Consumptio
+Appendix A. British Thermal Unit Conversion Factors
+A1. Approximate Heat Content of Petroleum and Other Liquids
+A2. Approximate Heat Content of Petroleum Production, Imports, and Exports
+A3. Approximate Heat Content of Petroleum Consumption and Fuel Ethanol
+A4. Approximate Heat Content of Natural Gas
+A5. Approximate Heat Content of Coal and Coal Coke
+A6. Approximate Heat Rates for Electricity, and Heat Content of Electricity
+Appendix B. Metric Conversion Factors, Metric Prefixes, and Other Physical Conversion Factors
+B1. Metric Conversion Factors
+B2. Metric Prefixes
+B3. Other Physical Conversion Factors
+Appendix C. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+C1. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+Appendix D. Estimated Primary Energy Consumption in the United States, Selected Years, 1635–1945
+D1. Estimated Primary Energy Consumption in the United States, Selected Years, 1635–1945
