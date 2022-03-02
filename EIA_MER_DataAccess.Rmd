@@ -1,14 +1,14 @@
 ---
 title: "EIA_MER_DataAccess"
 author: "Paul Leiby"
-date: "Aug 09, 2018"
+date: "June 05, 2019"
 output: word_document
 ---
 
-File: EIA_MER_DataAccess_2018.Rmd
+File: EIA_MER_DataAccess.Rmd
 
 Created by: Paul N. Leiby
-Last revised: 20190809
+Last revised: 20190605
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -16,13 +16,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Set working environment and paths
 
-```{r setWorkingEnv}
+```{r setWorkingEnv, echo=F}
 ## clear: remove (almost) everything in the working environment.
 ## You will get no warning, so don't do this unless you are really sure.
 rm(list = ls())
 
+echoWorking = T    # flag to control display of code execution
 #worksubpath = "/SPR/Data/EIA_MER"
-datasubpath = "../"
+datasubpath = "../data/" # local relative reference to project directory
 ```
 
 This reads from the EIA data browser website for the Annual Energy Review and Monthly Energy Review
@@ -174,36 +175,42 @@ Examples of Reading Tables from MER Data Site
 
 * Requires internet connection or local CSV file availability
 
-```{r setupWorkspace}
+```{r setupWorkspace, echo=echoWorking}
 #library(XLConnect)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(lubridate)
-
+library(knitr)   # for knitr::kable
+library(grid)
+library(gridExtra) # for gridExtra::tableGrob formatted table display
 ```
 
-```{r readMERdata}
-# set working directory - not necessary for RStudio project approach, or if console session launched from working directory
+### Establish Locations (URLs) and Functions for Reading MER Data)
+
+```{r readMERdata, echo=echoWorking}
+# set working directory - not necessary for RStudio project approach,
+# or if console session launched from working directory
 # setwd(paste0(workroot,worksubpath))
 
 # Specify data location
 # EIA MER URL query, less table name
 # MER_URLbase =  "https://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=" # outdated
 MER_URLbase =  "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl="
-# e.g.: sourceURL =  "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T11.01A"
+# e.g.: sourceURL =  "https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T11.01A"
 
-# download latest version of 4 tables from EIA/MER website
 naStrings = c("","Not Available","Not Applicable") # ways that MER indicates NA
 
 #tableSiteURL = "https://www.eia.gov/totalenergy/data/browser/"
 tableSiteURL = "https://www.eia.gov/totalenergy/data/browser/"
+
 #csvExtension = "csv.cfm?tbl="
 #xlsExtension = "xls.cfm?tbl="
 csvExtension = "csv.php?tbl="
 xlsExtension = "xls.php?tbl="
 
 
+# download latest version of 4 tables from EIA/MER website
 # "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.03" # MER Table 1.3 Primary Energy Consumption by Source
 # "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.06"
 # "http://www.eia.gov/totalenergy/data/browser/xls.cfm?tbl=T01.06"
@@ -212,23 +219,28 @@ xlsExtension = "xls.php?tbl="
 
 # syntax for call to EIA data browser
 browserSiteURL = "https://www.eia.gov/totalenergy/data/browser/index.php?tbl=T01.03#/?f=A"
-# http://www.eia.gov/beta/MER/index.cfm?tbl=T03.07C#/?f=M&start=197301&end=201603&charted=8-13
 
-onlineReading = T
+onlineReading = T  # flag indicating whether to download from EIA site (vs read local copy of file)
 
-# sectionWanted = "T03"
-# tableWanted = "07C"
-sectionWanted = "T01"
-tableWanted = "03"
+# tableURL = paste0(tableSiteURL, csvExtension, sectionWanted, ".", tableWanted)
 
-tableURL = paste0(tableSiteURL, csvExtension, sectionWanted, ".", tableWanted)
-
+# Read all MER tables as csv files,
+#   either downloading from EIA site or locally, based on onlineReading flag
 readMERtable <- function(sectionW, tableW, onlineReading = T) {
+  # function to download specified table from EIA's MER,
+  #  create a dataframe named appropriately,
+  #  and add table metadata to a dataframe compiling that info
+  # Use suppressWarnings() to avoid "NAs introduced by coercion" message
   if(onlineReading==T) { # get info from URL for EIA MER data site
-  #  T01.03 = read.csv(url(tableURL))
-    newdf = read.csv(url(paste0(tableSiteURL,csvExtension, sectionW, ".", tableW)))
+    if (tableW !="") {
+      #  as for table T01.03 
+      newdf = read.csv(url(paste0(tableSiteURL,csvExtension, sectionW, ".", tableW)))
+    } else { # special treatment of appendix tables the do not use "." separator or tableW field
+      #  as for table "TC1"
+      newdf = read.csv(url(paste0(tableSiteURL,csvExtension, sectionW)))
+    }
   } else { # assume csv file is locally available
-  #  T01.03 = read.csv(table))
+  #  e.g. T01.03 = read.csv("MER_T01_03.csv"))
     newdf = read.csv(    paste0(workroot,datasubpath, "MER_", sectionW, "_", tableW,".csv"))
   }
     
@@ -236,9 +248,10 @@ readMERtable <- function(sectionW, tableW, onlineReading = T) {
   return(newdf)
 }
 
-# First drop the values and dates, to get a table of metadata:
-#  variable names (MSN), and associated descriptions and units
 getMetaData <- function(MERdf, tableName) {
+  # fn to Extract a table of metadata from an EIA MER table dataframe
+  #  Drop the values and dates, leaving
+  #  variable names (MSN), and associated descriptions and units
   md = MERdf %>% select(-c(YYYYMM, Value)) %>% unique()
   # add table name, so that we can combine datasets and reconstruct tables
   md$Table = tableName
@@ -248,7 +261,10 @@ getMetaData <- function(MERdf, tableName) {
 
 ```
 
-```{r preprocessDataT01_03}
+The EIA table browser for the _Monthly Energy Report_ (MER) is found at `r tableSiteURL`.
+
+
+```{r preprocessDataT01_03, echo=echoWorking}
 onlineReading = T
 sectionWanted = "T01"
 tableWanted = "03"
@@ -262,18 +278,16 @@ EIAdf_metadata = data.frame()
 EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 ```
 
-```{r}
+```{r showEIAdf_table, echo=echoWorking}
 # for table formatting, see 
 # https://cran.r-project.org/web/packages/gridExtra/vignettes/tableGrob.html
 # https://github.com/baptiste/gridextra/wiki/tableGrob
-library(grid)
-library(gridExtra)
 # rescale parts of the table
 mytheme <- gridExtra::ttheme_default(
     core =    list(fg_params=list(cex = 0.5)),
     colhead = list(fg_params=list(cex = 1.0)),
     rowhead = list(fg_params=list(cex = 1.0)))
-myt <- gridExtra::tableGrob(EIAdf_metadata, theme = mytheme)
+myt <- gridExtra::tableGrob(select(EIAdf_metadata,-Column_Order), theme = mytheme)
 grid.draw(myt)
 # grid.table(EIAdf_metadata, gp=gpar(fontsize=8)) # throws error for fontsize param
 
@@ -283,14 +297,14 @@ EIAdf_w = EIAdf %>% select(-c(Column_Order, Description, Unit)) %>%
 summary(EIAdf_w)
 ```
 
-Visualize the data
+Create Functions for Generalized Download of MER Data
 -------------------
 
-```{r visualizeData0}
+Data are coded with dates (month 13 denotes annual value), and metadata indicating the series description and units.
+Date are in long (in dplyr terms, "gather"ed) form.
 
-```
 
-```{r defineDownloadEIA_MER}
+```{r defineDownloadEIA_MER, echo=echoWorking}
 
 downloadEIA_MER_table <- function (sectionW, tableW) {
   # function to download specified table from EIA's MER,
@@ -315,7 +329,7 @@ downloadEIA_MER_table <- function (sectionW, tableW) {
 
 ### Get US Oil Production, Consumption, and Import Data
 
-```{r preprocessDataT03_01}
+```{r preprocessDataT03_01, echo=echoWorking}
 onlineReading = T
 
 sectionWanted = "T03"
@@ -334,6 +348,19 @@ EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 sectionWanted = "T11"
 tableWanted = "02"
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+
+sectionWanted = "T11"
+tableWanted = "03"
 # Use suppressWarnings() to avoid "NAs introduced by coercion" message
 EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
 newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
@@ -388,16 +415,20 @@ EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 ```
 
-### Combine the read Tables 
+### Get Biofuel Production/Consumption Data and Conversion Factors
 
-```{r combineReadTables}
+```{r combineBiofuelDataTables, echo=echoWorking}
 MER_BioFuels = MER_T10_01 %>% filter(MSN=="BFPRBUS")
 # https://en.wikipedia.org/wiki/Gasoline_gallon_equivalent
 BTUperGGE = 114000 
 TrilBTUperYperkBD = BTUperGGE*42*1000*365.25/1E12
 kBDperTrilBTUperY = 1/TrilBTUperYperkBD
+```
 
-# combine the petroleum data table
+
+### Combine the Petroleum Data Tables
+
+```{r combinePetroleumTables, echo=echoWorking}
 MER_PetData = rbind(MER_T03_01, MER_T11_01A, MER_T11_01B, MER_T11_02, MER_BioFuels)
 MER_PetData$YYYYMMc = as.character(MER_PetData$YYYYMM)
 
@@ -407,8 +438,10 @@ MER_PetData = MER_PetData %>%
 
 ```
 
-```{r}
-# look for duplicate variables and drop (necessary before spread(), to avoid error)
+#### look for duplicate variables and drop
+
+```{r dropDuplicateVars, echo=echoWorking}
+#  (necessary before spread(), to avoid error)
 
 # Remove duplicate rows based on one or more col values: dplyr::distinct(my_data, colname).
 #   distinct() is best-suited for interactive use. 
@@ -419,12 +452,14 @@ MER_PetData = MER_PetData %>%
 #  distinct_("MSN", "Value", "YYYYMM")  # leaves only the variables tested for distinctness
 
 Pet = MER_PetData %>% select(MSN, Value, YYYYMM)
+
+MER_Dupl_PetData = MER_PetData[duplicated(Pet), ]  # keep all vars, if distinct name/value/date
 MER_PetData = MER_PetData[!duplicated(Pet), ]  # keep all vars, if distinct name/value/date
 ```
 
 get annual data subset
 
-```{r}
+```{r extractAnnualSubset, echo=echoWorking}
 MER_PetDataA = MER_PetData %>% filter(MM == "13") # get annual data only
 
 # MER_PetDataA = MER_PetDataA %>%
@@ -432,10 +467,13 @@ MER_PetDataA = MER_PetData %>% filter(MM == "13") # get annual data only
 
 ```
 
-Keep only essential fields (name MSN, Value, and date )
- and spread out vars into columns
+Keep only essential petroluem production/consumption fields (name MSN, Value, and date )
+ and spread out vars into columns.
 
-```{r spreadMainPetrVars}
+Note that petroleum consumption equals "Petroleum Products Supplied."
+
+
+```{r spreadMainPetrVars, echo=echoWorking}
 
 varsWanted = c("PAPRPUS", "NLPRPUS", "PNPRPUS",         # Field prod: Total Crude, NGL, Total
                "RYPRPUS",                               # Renewable Fuels and Oxygenates
@@ -454,6 +492,7 @@ EIAdf_metadata %>% filter(MSN %in% varsWanted)
 # c("PARCPUS", "PACCPUS", "PAICPUS","PAACPUS", "PAEIZUS")
 # Residential, Commercial, Industrial, Transportation and Electric
 
+
 PetA = MER_PetDataA %>% 
   select(-c(YYYYMM, Description, Unit, MM)) %>%
   filter(MSN %in% varsWanted) %>%
@@ -462,20 +501,21 @@ PetA = MER_PetDataA %>%
 PetA$BFPRBUS = PetA$BFPRBUS*kBDperTrilBTUperY
 ```
 
-```{r reportSelectedPetrValues}
+```{r reportSelectedPetrValues, echo=echoWorking}
 rownames(PetA) = PetA$YYYY
-cat("2007 Consumption: ", PetA["2007", "PATCPUS"])
-cat("2012 Consumption: ", PetA["2012", "PATCPUS"])
-cat("2017 Consumption: ", PetA["2017", "PATCPUS"])
+cat("2007 Consumption: ", PetA["2007", "PATCPUS"], "\n")
+cat("2012 Consumption: ", PetA["2012", "PATCPUS"], "\n")
+cat("2017 Consumption: ", PetA["2017", "PATCPUS"], "\n")
 
-cat("2007 Production: ", PetA["2007", "PATCPUS"])
-cat("2012 Production: ", PetA["2012", "PATCPUS"])
-cat("2016 Production: ", PetA["2016", "PATCPUS"])
-cat("2017 Production: ", PetA["2017", "PATCPUS"])
+cat("2007 Production: ", PetA["2007", "PATCPUS"], "\n")
+cat("2012 Production: ", PetA["2012", "PATCPUS"], "\n")
+cat("2016 Production: ", PetA["2016", "PATCPUS"], "\n")
+cat("2017 Production: ", PetA["2017", "PATCPUS"], "\n")
 
-cat("2007 Biofuel Prod: ", PetA["2007", "BFPRBUS"])
-cat("2017 Biofuel Prod: ", PetA["2017", "BFPRBUS"])
+cat("2007 Biofuel Prod: ", PetA["2007", "BFPRBUS"], "\n")
+cat("2017 Biofuel Prod: ", PetA["2017", "BFPRBUS"], "\n")
 
+# test whether Petroleum Net Imports (PANIPUS) matches Imports - Exports
 sum(abs(PetA$PAIMPUS - PetA$PAEXPUS - PetA$PANIPUS))
 test = PetA %>% 
   mutate(
@@ -487,28 +527,66 @@ test = PetA %>%
 
 PetA = PetA %>% 
   mutate(
-    ImpFract  = PANIPUS/PATCPUS
-  )
+    ImpFract  = PANIPUS/PATCPUS,
+    YYYY = as.numeric(YYYY)
+  ) %>%
+  rename(Year = YYYY)
 
-rownames(PetA) = PetA$YYYY
-cat("2007 Imports/Consumption: ", PetA["2007", "ImpFract"])
-cat("2016 Imports/Consumption: ", PetA["2016", "ImpFract"])
-cat("2077 Imports/Consumption: ", PetA["2017", "ImpFract"])
+rownames(PetA) = PetA$Year
+cat("2007 Imports/Consumption: ", PetA["2007", "ImpFract"], "\n")
+cat("2016 Imports/Consumption: ", PetA["2016", "ImpFract"], "\n")
+cat("2017 Imports/Consumption: ", PetA["2017", "ImpFract"], "\n")
+cat("2018 Imports/Consumption: ", PetA["2018", "ImpFract"], "\n")
+```
 
+Visualize the data
+-------------------
+
+#### U.S. Petroleum Production
+```{r visualizeAnnualProdData0, echo=echoWorking}
+PetA %>% select(-ImpFract) %>%
+  gather(key=MSN, value=Value, -Year) %>%
+  ggplot(aes(x=Year, y=Value, color=MSN))+geom_line() +
+  ggtitle("US Petroleum Supplies")
+```
+
+```{r tableOfSupplySeriesMetadata, echo=echoWorking}
+EIAdf_metadata %>% filter(MSN %in% varsWanted) %>%
+  select(MSN, Description) %>%
+  arrange(as.character(MSN)) %>%
+  kable(caption = "Table: Legend for Petroleum and Other Liquids Supply")
+```
+
+#### U.S. Net Imports as a Fraction of Consumption
+```{r visualizeAnnualData0, echo=echoWorking}
+PetA %>%
+  ungroup() %>%
+  ggplot(aes(x=Year, y=ImpFract))+geom_line() +
+  ggtitle("US Petroleum Net Imports as a Fraction of Consumption")
+
+# PetA %>% select(Year,ImpFract) %>% str()
 ```
 
 
 ### Plot Monthly Petroleum Consumption
 
-``` {r plotPetrStocksumption}
-PetrCons = T11_02
-PetrCons$Date <- as.Date(paste0(as.character(PetrCons$YYYYMM),"15"),format="%Y%m%d")
-PetrCons = PetrCons %>% separate(Description, sep=",", c("Series", "Country"))
+``` {r plotPetrConsumption, echo=echoWorking}
+PetrCons = MER_T11_02
+PetrCons$Date <- as.Date(paste0(as.character(PetrCons$YYYYMM),"15"),format="%Y%m%d") # returns NA for month 13 (annual obs)
+PetrCons = PetrCons %>% separate(Description, sep=",", c("Series", "Region"))
 
-PetrCons %>% filter(Series=="Petroleum Consumption", !is.na(Value)) %>%
-  ggplot(aes(x=Date, y=Value, color=Country)) + 
-  geom_line() + ggtitle("Petroleum Consumption") + ylab("1000 B/day")
+PetrCons %>%  filter(!is.na(Date)) %>% # drops annual obs
+  filter(Series=="Petroleum Consumption" & !is.na(Value)) %>%
+  ggplot(aes(x=Date, y=Value, color=Region)) + 
+  geom_line() + ggtitle("Petroleum Consumption (Monthly Data)") + ylab("1000 B/day")
 
+```
+
+```{r showPetrConsSpread, echo=echoWorking}
+# PetrCons %>%  filter(!is.na(Date)) %>% # drops annual obs
+#   filter(Series=="Petroleum Consumption", !is.na(Value)) %>%
+#   select(Date, Value, Region) %>%
+#   spread(key=Region, value = Value)
 ```
 
 ### Prices
@@ -524,25 +602,65 @@ PetrCons %>% filter(Series=="Petroleum Consumption", !is.na(Value)) %>%
     10.2 Renewable Energy Consumption
     10.3 Fuel Ethanol Overview
 
-```{r readMERPrices}
+```{r readMERPrices, echo=echoWorking}
+
+# Petroleum Prices - Crude Oil Price Summary
 sectionWanted = "T09" # Petroleum Prices
 tableWanted = "01"    # Crude Oil Price Summary
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
 EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
-
-assign(paste("MER",sectionWanted, tableWanted,sep="_"), EIAdf)
-
+newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 ```
 
+#### Note: Reading GDP and Deflators does not yet work right due to different convention for naming tables in Appendices.
+
+Seek Appendix Table TC1 : Population, US GDP and US Gross Output
+
+```{r readMERGDPandDeflators, echo=echoWorking}
+# Table C1. Population, U.S. Gross Domestic Product, and U.S. Gross Output
+sectionWanted = "TC1" # Appendix (section and table not separated by ".")
+tableWanted = ""      # signal that section and table not separated by "."
+# https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=TC1
+# vs
+# "http://www.eia.gov/totalenergy/data/browser/csv.cfm?tbl=T01.03" # MER Table 1.3 Primary Energy Consumption by Source
+
+# Use suppressWarnings() to avoid "NAs introduced by coercion" message
+EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
+newTableName = paste("MER",sectionWanted, sep="_")
+assign(newTableName, EIAdf)
+# to check if dataframe exists, given name as text string df_name:
+#  exists(df_name) && is.data.frame(get(df_name))
+if (!exists("EIAdf_metadata")) {
+  EIAdf_metadata = data.frame()  
+}
+EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+```
 
 ### Plot Monthly OECD Stocks
 
-``` {r plotPetrStocks}
-PetrStocks = T11_03
+``` {r plotPetrStocks, echo=echoWorking}
+PetrStocks = MER_T11_03
 PetrStocks$Date <- as.Date(paste0(as.character(PetrStocks$YYYYMM),"15"),format="%Y%m%d")
-PetrStocks = PetrStocks %>% separate(Description, sep=",", c("Series", "Country"))
+PetrStocks = PetrStocks %>% separate(Description, sep=",", c("Series", "Region"))
 
-PetrStocks %>% filter(Series=="Petroleum Stocks", !is.na(Value)) %>%
-  ggplot(aes(x=Date, y=Value, color=Country)) + 
+PetrStocks %>% filter(!is.na(Date)) %>% # drops annual obs
+  filter(Series=="Petroleum Stocks", !is.na(Value)) %>%
+  ggplot(aes(x=Date, y=Value, color=Region)) + 
   geom_line() + ggtitle("Petroleum Stocks") + ylab("Million Barrels")
 
 ```
+
+### Catalog of Series Loaded
+
+```{r catalogSeriesMetadata, echo=echoWorking}
+EIAdf_metadata %>% select(-Column_Order) %>%
+  kable(caption = "Metadata for Primary Series Downloaded")
+```
+
