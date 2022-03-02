@@ -1,14 +1,13 @@
 ---
 title: "EIA_MER_DataAccess"
 author: "Paul Leiby"
-date: "June 05, 2019"
 output: word_document
 ---
 
 File: EIA_MER_DataAccess.Rmd
 
 Created by: Paul N. Leiby
-Last revised: 20190605
+Last revised: 20220302
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -177,10 +176,9 @@ Examples of Reading Tables from MER Data Site
 
 ```{r setupWorkspace, echo=echoWorking}
 #library(XLConnect)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(lubridate)
+library(tidyverse)
+# library(dplyr)
+# library(lubridate)
 library(knitr)   # for knitr::kable
 library(grid)
 library(gridExtra) # for gridExtra::tableGrob formatted table display
@@ -188,7 +186,7 @@ library(gridExtra) # for gridExtra::tableGrob formatted table display
 
 ### Establish Locations (URLs) and Functions for Reading MER Data)
 
-```{r readMERdata, echo=echoWorking}
+```{r readMERdata_setup, echo=echoWorking}
 # set working directory - not necessary for RStudio project approach,
 # or if console session launched from working directory
 # setwd(paste0(workroot,worksubpath))
@@ -223,7 +221,10 @@ browserSiteURL = "https://www.eia.gov/totalenergy/data/browser/index.php?tbl=T01
 onlineReading = T  # flag indicating whether to download from EIA site (vs read local copy of file)
 
 # tableURL = paste0(tableSiteURL, csvExtension, sectionWanted, ".", tableWanted)
+```
 
+
+```{r defFn_readMERdata, echo=echoWorking}
 # Read all MER tables as csv files,
 #   either downloading from EIA site or locally, based on onlineReading flag
 readMERtable <- function(sectionW, tableW, onlineReading = T) {
@@ -247,7 +248,10 @@ readMERtable <- function(sectionW, tableW, onlineReading = T) {
   newdf$Value = as.numeric(as.character(newdf$Value))
   return(newdf)
 }
+```
 
+
+```{r defFn_getMetadata, echo=echoWorking}
 getMetaData <- function(MERdf, tableName) {
   # fn to Extract a table of metadata from an EIA MER table dataframe
   #  Drop the values and dates, leaving
@@ -263,16 +267,24 @@ getMetaData <- function(MERdf, tableName) {
 
 The EIA table browser for the _Monthly Energy Report_ (MER) is found at `r tableSiteURL`.
 
+```{r specifyTableT01_03, echo=echoWorking}
+onlineReading = T
+sectionWanted = "T03"
+tableWanted = "01"
+```
+
+Example: Use defined functions `readMERdata` and `getMetaData` to
+load a single table, `r paste("MER",sectionWanted, tableWanted,sep="_")`, from the online MER:
+Also get Metadata for this table
 
 ```{r preprocessDataT01_03, echo=echoWorking}
-onlineReading = T
-sectionWanted = "T01"
-tableWanted = "03"
-
 EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
 
+## Warning in readMERtable(sectionWanted, tableWanted, onlineReading) :
+##   NAs introduced by coercion
+  
 newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
-assign(newTableName, EIAdf)
+assign(newTableName, EIAdf) # rename default table name from EIAdf to actual
 
 EIAdf_metadata = data.frame()
 EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
@@ -304,25 +316,24 @@ Data are coded with dates (month 13 denotes annual value), and metadata indicati
 Date are in long (in dplyr terms, "gather"ed) form.
 
 
-```{r defineDownloadEIA_MER, echo=echoWorking}
-
-downloadEIA_MER_table <- function (sectionW, tableW) {
+```{r defFn_downloadEIA_MER, echo=echoWorking}
+readMERtable_and_rename <- function (sectionW, tableW) {
   # function to download specified table from EIA's MER,
   #  create a dataframe named appropriately,
   #  and add table metadata to a dataframe compiling that info
   # Use suppressWarnings() to avoid "NAs introduced by coercion" message
   EIAdf = readMERtable(sectionW, tableW, onlineReading=T)
-  tableName = paste("MER",sectionW, tableW,sep="_")
-  assign(tableName, EIAdf)
+  newTableName = paste("MER",sectionW, tableW,sep="_")
+  assign(newTableName, EIAdf)
 
-  # to check if dataframe exists, given name as text string df_name:
-  #  exists(df_name) && is.data.frame(get(df_name))
-  if (!exists("EIAdf_metadata")) {
-      EIAdf_metadata = data.frame()  
-  }
+  # # to check if dataframe exists, given name as text string df_name:
+  # #  exists(df_name) && is.data.frame(get(df_name))
+  # if (!exists("EIAdf_metadata")) {
+  #     EIAdf_metadata = data.frame()  
+  # } # else append new data to old
 
-  EIAdf_metadata = rbind(df_metadata, getMetaData(EIAdf, tableName ))
-  
+  # EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+  # # returns thge metadata only
 }
 
 ```
@@ -334,18 +345,32 @@ onlineReading = T
 
 sectionWanted = "T03"
 tableWanted = "01"
+```
+
+```{r}
+# following is kind of dumb, because function renames table with EIA MER number,
+# for sectionWanted & tableWanted, and that result is renamed when returned.
+# SO `readMERtable_and_renam` may not offer any advantage over readMERtable
+USOil = readMERtable_and_renam(sectionWanted, tableWanted)
+```
+
+
+```{r readDataT03_01, echo=echoWorking}
 # Use suppressWarnings() to avoid "NAs introduced by coercion" message
 EIAdf = readMERtable(sectionWanted, tableWanted, onlineReading)
 newTableName = paste("MER",sectionWanted, tableWanted,sep="_")
 assign(newTableName, EIAdf)
+
 # to check if dataframe exists, given name as text string df_name:
 #  exists(df_name) && is.data.frame(get(df_name))
 if (!exists("EIAdf_metadata")) {
   EIAdf_metadata = data.frame()  
 }
 EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+```
 
 
+```{r preprocessDataMultTables, echo=echoWorking}
 sectionWanted = "T11"
 tableWanted = "02"
 # Use suppressWarnings() to avoid "NAs introduced by coercion" message
@@ -357,7 +382,8 @@ assign(newTableName, EIAdf)
 if (!exists("EIAdf_metadata")) {
   EIAdf_metadata = data.frame()  
 }
-EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+if (nrow(EIAdf) > 0)
+  EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 sectionWanted = "T11"
 tableWanted = "03"
@@ -370,7 +396,8 @@ assign(newTableName, EIAdf)
 if (!exists("EIAdf_metadata")) {
   EIAdf_metadata = data.frame()  
 }
-EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+if (nrow(EIAdf) > 0)
+  EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 
 sectionWanted = "T11"
@@ -384,7 +411,8 @@ assign(newTableName, EIAdf)
 if (!exists("EIAdf_metadata")) {
   EIAdf_metadata = data.frame()  
 }
-EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+if (nrow(EIAdf) > 0)
+  EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 sectionWanted = "T11"
 tableWanted = "01A"
@@ -397,7 +425,8 @@ assign(newTableName, EIAdf)
 if (!exists("EIAdf_metadata")) {
   EIAdf_metadata = data.frame()  
 }
-EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
+if (nrow(EIAdf) > 0)
+  EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 # Renewable Energy Production
 sectionWanted = "T10"
@@ -415,7 +444,7 @@ EIAdf_metadata = rbind(EIAdf_metadata, getMetaData(EIAdf, newTableName ))
 
 ```
 
-### Get Biofuel Production/Consumption Data and Conversion Factors
+## Get Biofuel Production/Consumption Data and Conversion Factors
 
 ```{r combineBiofuelDataTables, echo=echoWorking}
 MER_BioFuels = MER_T10_01 %>% filter(MSN=="BFPRBUS")
